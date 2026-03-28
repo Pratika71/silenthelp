@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#e8000e" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="SilentHelp" />
+  <title>SilentHelp – Emergency Alert</title>
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json" />
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Nunito:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ════════════════════════════════════════
+       CSS VARIABLES
+    ════════════════════════════════════════ */
+    :root {
+      --red:       #e8000e;
+      --red-dark:  #9a0008;
+      --red-glow:  rgba(232,0,14,0.4);
+      --red-soft:  rgba(232,0,14,0.08);
+      --bg:        #080809;
+      --surface:   #101012;
+      --card:      #16161a;
+      --border:    rgba(255,255,255,0.07);
+      --text:      #efefef;
+      --muted:     #555;
+      --green:     #00e676;
+    }
+
+    /* ════════════════════════════════════════
+       BASE RESET
+    ════════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      overflow: hidden; /* mobile app feel */
+    }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-image:
+        radial-gradient(ellipse 100% 50% at 50% -10%, #1f0205 0%, transparent 70%);
+    }
+
+    /* ════════════════════════════════════════
+       PAGE SYSTEM
+    ════════════════════════════════════════ */
+    .page {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      max-width: 400px;
+      height: 100vh;
+      padding: 48px 24px 32px;
+      overflow-y: auto;
+      animation: pageFade 0.4s ease;
+    }
+    .page.active { display: flex; }
+
+    @keyframes pageFade {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ════════════════════════════════════════
+       BRAND / LOGO
+    ════════════════════════════════════════ */
+    .brand {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 36px;
+    }
+    .brand-icon {
+      width: 72px; height: 72px;
+      background: radial-gradient(circle at 35% 35%, #ff3344, var(--red-dark));
+      border-radius: 20px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 34px;
+      box-shadow: 0 0 30px var(--red-glow), 0 8px 24px rgba(0,0,0,0.5);
+    }
+    .brand-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 32px;
+      letter-spacing: 3px;
+      color: #fff;
+    }
+    .brand-name span { color: var(--red); }
+    .brand-tagline {
+      font-size: 12px;
+      color: var(--muted);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    /* ════════════════════════════════════════
+       CARD
+    ════════════════════════════════════════ */
+    .card {
+      width: 100%;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 28px 24px;
+      box-shadow: 0 12px 48px rgba(0,0,0,0.6);
+    }
+    .card-title {
+      font-size: 20px;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+    .card-sub {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+
+    /* ════════════════════════════════════════
+       FORM
+    ════════════════════════════════════════ */
+    label {
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--muted);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    input {
+      width: 100%;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      color: var(--text);
+      font-family: 'Nunito', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      margin-bottom: 18px;
+    }
+    input:focus {
+      border-color: var(--red);
+      box-shadow: 0 0 0 3px var(--red-soft);
+    }
+    input::placeholder { color: #2e2e32; font-weight: 400; }
+
+    /* ════════════════════════════════════════
+       BUTTONS
+    ════════════════════════════════════════ */
+    .btn {
+      width: 100%;
+      padding: 16px;
+      border: none;
+      border-radius: 14px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.2s;
+    }
+    .btn:active { transform: scale(0.97); }
+
+    .btn-primary {
+      background: var(--red);
+      color: #fff;
+      box-shadow: 0 4px 24px var(--red-glow);
+    }
+    .btn-primary:hover {
+      box-shadow: 0 6px 32px rgba(232,0,14,0.55);
+    }
+
+    /* ════════════════════════════════════════
+       DASHBOARD HEADER
+    ════════════════════════════════════════ */
+    .dash-top {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .dash-brand {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22px;
+      letter-spacing: 2px;
+      color: #fff;
+    }
+    .dash-brand span { color: var(--red); }
+
+    .status-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(0,230,118,0.08);
+      border: 1px solid rgba(0,230,118,0.2);
+      border-radius: 20px;
+      padding: 4px 10px;
+      font-size: 11px;
+      color: var(--green);
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+    .dot {
+      width: 7px; height: 7px;
+      background: var(--green);
+      border-radius: 50%;
+      animation: blink 2s infinite;
+    }
+    @keyframes blink {
+      0%,100% { opacity: 1; }
+      50%      { opacity: 0.3; }
+    }
+
+    /* Welcome card */
+    .welcome-card {
+      width: 100%;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 16px 20px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .avatar {
+      width: 44px; height: 44px;
+      background: var(--red-soft);
+      border: 1.5px solid rgba(232,0,14,0.3);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+    .welcome-text .hey { font-size: 12px; color: var(--muted); }
+    .welcome-text .name { font-size: 18px; font-weight: 800; color: #fff; }
+
+    /* ════════════════════════════════════════
+       INSTRUCTION STRIP
+    ════════════════════════════════════════ */
+    .triggers {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .trigger-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 12px;
+      text-align: center;
+    }
+    .trigger-card .t-icon { font-size: 24px; margin-bottom: 6px; }
+    .trigger-card .t-label {
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      line-height: 1.4;
+    }
+    .trigger-card .t-label strong { color: #ff7777; display: block; font-size: 13px; }
+
+    /* ════════════════════════════════════════
+       BIG EMERGENCY BUTTON
+    ════════════════════════════════════════ */
+    .emergency-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 8px 0 6px;
+    }
+
+    /* Pulsing rings */
+    .ring {
+      position: absolute;
+      width: 190px; height: 190px;
+      border-radius: 50%;
+      border: 1.5px solid var(--red);
+      opacity: 0;
+      animation: ring-out 2.5s ease-out infinite;
+    }
+    .ring:nth-child(2) { animation-delay: 0.83s; }
+    .ring:nth-child(3) { animation-delay: 1.66s; }
+    @keyframes ring-out {
+      0%   { transform: scale(0.65); opacity: 0.7; }
+      100% { transform: scale(1.5);  opacity: 0; }
+    }
+
+    #emergencyBtn {
+      position: relative; z-index: 2;
+      width: 155px; height: 155px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, #ff2233, #8a0006);
+      border: none;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      box-shadow:
+        0 0 0 10px rgba(232,0,14,0.1),
+        0 0 0 20px rgba(232,0,14,0.05),
+        0 16px 48px rgba(0,0,0,0.7);
+      transition: transform 0.15s, box-shadow 0.2s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #emergencyBtn:hover {
+      transform: scale(1.05);
+      box-shadow:
+        0 0 0 12px rgba(232,0,14,0.15),
+        0 0 0 24px rgba(232,0,14,0.07),
+        0 20px 56px rgba(232,0,14,0.4);
+    }
+    #emergencyBtn:active { transform: scale(0.95); }
+    #emergencyBtn .e-icon  { font-size: 38px; }
+    #emergencyBtn .e-label {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 16px;
+      letter-spacing: 2.5px;
+      color: rgba(255,255,255,0.9);
+    }
+
+    /* Tap counter */
+    #tapCounter {
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+      min-height: 20px;
+      margin: 8px 0 16px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      transition: color 0.2s;
+    }
+    #tapCounter.lit { color: #ff5555; }
+
+    /* ════════════════════════════════════════
+       ALERT BOX
+    ════════════════════════════════════════ */
+    #alertBox {
+      width: 100%;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      overflow: hidden;
+      max-height: 0;
+      transition: max-height 0.5s ease;
+    }
+    #alertBox.open { max-height: 500px; }
+
+    .alert-inner { padding: 18px 20px; }
+
+    .alert-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .alert-badge {
+      background: var(--red);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      text-transform: uppercase;
+    }
+    .alert-time { font-size: 11px; color: var(--muted); }
+
+    .alert-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--text);
+      opacity: 0;
+      animation: rowIn 0.35s ease forwards;
+    }
+    .alert-row:last-of-type { border-bottom: none; }
+    .alert-row .ri { font-size: 17px; flex-shrink: 0; margin-top: 1px; }
+
+    @keyframes rowIn {
+      from { opacity: 0; transform: translateX(-10px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    /* Cancel countdown */
+    #cancelSection { margin-top: 14px; display: none; }
+    #cancelSection.show { display: block; }
+
+    #countdownBar {
+      height: 3px;
+      background: var(--red);
+      border-radius: 2px;
+      width: 100%;
+      transition: width 5s linear;
+    }
+    #cancelBtn {
+      width: 100%;
+      margin-top: 10px;
+      padding: 11px;
+      background: transparent;
+      border: 1px solid rgba(232,0,14,0.35);
+      border-radius: 12px;
+      color: #ff6666;
+      font-family: 'Nunito', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #cancelBtn:hover { background: var(--red-soft); }
+
+    #confirmedMsg {
+      display: none;
+      margin-top: 12px;
+      padding: 12px;
+      background: rgba(0,230,118,0.07);
+      border: 1px solid rgba(0,230,118,0.2);
+      border-radius: 12px;
+      color: var(--green);
+      font-size: 13px;
+      font-weight: 700;
+      text-align: center;
+      animation: rowIn 0.3s ease;
+    }
+
+    /* ════════════════════════════════════════
+       SHAKE PERMISSION BUTTON
+    ════════════════════════════════════════ */
+    #shakePermBtn {
+      width: 100%;
+      margin-top: 10px;
+      padding: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--muted);
+      font-family: 'Nunito', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: none; /* shown only on iOS */
+    }
+
+    /* ════════════════════════════════════════
+       FLASH OVERLAY
+    ════════════════════════════════════════ */
+    #flash {
+      position: fixed; inset: 0;
+      background: var(--red);
+      opacity: 0;
+      pointer-events: none;
+      z-index: 9999;
+    }
+    @keyframes flashAnim {
+      0%   { opacity: 0.4; }
+      100% { opacity: 0; }
+    }
+    #flash.go { animation: flashAnim 0.6s ease forwards; }
+
+    /* Shake animation on button */
+    @keyframes shake {
+      0%,100% { transform: translateX(0) rotate(0); }
+      20%     { transform: translateX(-10px) rotate(-3deg); }
+      40%     { transform: translateX(10px) rotate(3deg); }
+      60%     { transform: translateX(-6px); }
+      80%     { transform: translateX(6px); }
+    }
+    .shake { animation: shake 0.6s ease !important; }
+  </style>
+</head>
+<body>
+
+<!-- Red flash overlay -->
+<div id="flash"></div>
+
+<!-- ══════════════════════════════════════════
+     PAGE 1 — REGISTER
+══════════════════════════════════════════ -->
+<div class="page active" id="registerPage">
+
+  <div class="brand">
+    <div class="brand-icon">🆘</div>
+    <div class="brand-name">Silent<span>Help</span></div>
+    <div class="brand-tagline">Universal Emergency Alert System</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Set Up Your Profile</div>
+    <div class="card-sub">Your data stays on your device only. Nothing is uploaded.</div>
+
+    <label for="nameInput">Your Full Name</label>
+    <input type="text" id="nameInput" placeholder="e.g. Priya Sharma" maxlength="40" autocomplete="name" />
+
+    <label for="contactInput">Emergency Contact Number</label>
+    <input type="tel" id="contactInput" placeholder="e.g. +91 98765 43210" maxlength="20" autocomplete="tel" />
+
+    <button class="btn btn-primary" onclick="saveAndGo()">
+      🔒 Activate SilentHelp
+    </button>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════
+     PAGE 2 — DASHBOARD
+══════════════════════════════════════════ -->
+<div class="page" id="dashboardPage">
+
+  <!-- Top bar -->
+  <div class="dash-top">
+    <div class="dash-brand">Silent<span>Help</span></div>
+    <div class="status-pill"><div class="dot"></div>ACTIVE</div>
+  </div>
+
+  <!-- Welcome -->
+  <div class="welcome-card">
+    <div class="avatar">👤</div>
+    <div class="welcome-text">
+      <div class="hey">Stay safe,</div>
+      <div class="name" id="displayName">User</div>
+    </div>
+  </div>
+
+  <!-- Trigger methods -->
+  <div class="triggers">
+    <div class="trigger-card">
+      <div class="t-icon">👆</div>
+      <div class="t-label"><strong>Tap 3×</strong>Anywhere on screen within 2 sec</div>
+    </div>
+    <div class="trigger-card">
+      <div class="t-icon">📳</div>
+      <div class="t-label"><strong>Shake Phone</strong>Shake hard to trigger alert</div>
+    </div>
+  </div>
+
+  <!-- Emergency button -->
+  <div class="emergency-wrap">
+    <div class="ring"></div>
+    <div class="ring"></div>
+    <div class="ring"></div>
+    <button id="emergencyBtn" onclick="recordTap()">
+      <span class="e-icon">🚨</span>
+      <span class="e-label">EMERGENCY</span>
+    </button>
+  </div>
+
+  <!-- Tap counter hint -->
+  <div id="tapCounter"></div>
+
+  <!-- iOS shake permission button -->
+  <button id="shakePermBtn" onclick="requestShakePermission()">
+    📳 Enable Shake Detection (tap here)
+  </button>
+
+  <!-- Alert output -->
+  <div id="alertBox">
+    <div class="alert-inner">
+      <div class="alert-head">
+        <span class="alert-badge">🔴 ALERT SENT</span>
+        <span class="alert-time" id="alertTime"></span>
+      </div>
+      <div class="alert-row" style="animation-delay:0.05s">
+        <span class="ri">🚨</span><span id="msgLine1"></span>
+      </div>
+      <div class="alert-row" style="animation-delay:0.15s">
+        <span class="ri">📩</span><span id="msgLine2"></span>
+      </div>
+      <div class="alert-row" style="animation-delay:0.25s">
+        <span class="ri">📍</span><span id="msgLine3"></span>
+      </div>
+      <div class="alert-row" style="animation-delay:0.35s">
+        <span class="ri">🗺️</span><span id="msgLine4"></span>
+      </div>
+
+      <!-- Cancel section -->
+      <div id="cancelSection">
+        <div id="countdownBar"></div>
+        <button id="cancelBtn" onclick="cancelAlert()">✕ Cancel Alert (5 seconds)</button>
+      </div>
+
+      <!-- Confirmed -->
+      <div id="confirmedMsg">✅ Alert confirmed &amp; SMS opened!</div>
+    </div>
+  </div>
+
+</div><!-- /dashboardPage -->
+
+
+<!-- ══════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════ -->
+<script>
+
+  // ─── State ───────────────────────────────────────────────
+  let tapCount     = 0;
+  let tapTimer     = null;
+  let cancelTimer  = null;
+  let cancelled    = false;
+  let userLat      = null;
+  let userLon      = null;
+  let shakeEnabled = false;
+
+  // Shake detection threshold
+  const SHAKE_THRESHOLD = 18;  // m/s² — increase if too sensitive
+  let lastX = 0, lastY = 0, lastZ = 0;
+
+  // ─── On Load ─────────────────────────────────────────────
+  window.addEventListener('load', () => {
+    // Register service worker for PWA offline support
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js').catch(() => {});
+    }
+
+    // If already registered, go straight to dashboard
+    if (localStorage.getItem('sh_name')) {
+      showDashboard();
+    }
+  });
+
+  // ─── SAVE & GO TO DASHBOARD ──────────────────────────────
+  function saveAndGo() {
+    const name    = document.getElementById('nameInput').value.trim();
+    const contact = document.getElementById('contactInput').value.trim();
+
+    if (!name || !contact) {
+      alert('Please fill in both your name and emergency contact!');
+      return;
+    }
+
+    // Save to localStorage — stays on device forever
+    localStorage.setItem('sh_name',    name);
+    localStorage.setItem('sh_contact', contact);
+
+    showDashboard();
+  }
+
+  // ─── SHOW DASHBOARD ──────────────────────────────────────
+  function showDashboard() {
+    const name = localStorage.getItem('sh_name');
+    document.getElementById('displayName').textContent = name;
+
+    document.getElementById('registerPage').classList.remove('active');
+    document.getElementById('dashboardPage').classList.add('active');
+
+    // Start getting GPS location in background
+    startLocationWatch();
+
+    // Setup shake detection
+    setupShake();
+
+    // Setup tap detection on dashboard
+    setupTapDetection();
+  }
+
+  // ─── GPS LOCATION (background) ───────────────────────────
+  function startLocationWatch() {
+    if (!navigator.geolocation) return;
+
+    // Keep updating location silently in background
+    navigator.geolocation.watchPosition(
+      (pos) => {
+        userLat = pos.coords.latitude.toFixed(6);
+        userLon = pos.coords.longitude.toFixed(6);
+      },
+      () => {},
+      { enableHighAccuracy: true, maximumAge: 10000 }
+    );
+  }
+
+  // ─── SHAKE DETECTION ─────────────────────────────────────
+  function setupShake() {
+    // iOS 13+ needs user permission for DeviceMotion
+    if (typeof DeviceMotionEvent !== 'undefined' &&
+        typeof DeviceMotionEvent.requestPermission === 'function') {
+      // Show iOS permission button
+      document.getElementById('shakePermBtn').style.display = 'block';
+    } else {
+      // Android & other — just start listening directly
+      startShakeListener();
+    }
+  }
+
+  // iOS: user taps button to grant permission
+  function requestShakePermission() {
+    DeviceMotionEvent.requestPermission().then(state => {
+      if (state === 'granted') {
+        startShakeListener();
+        document.getElementById('shakePermBtn').style.display = 'none';
+        document.getElementById('shakePermBtn').textContent = '✅ Shake enabled!';
+      }
+    }).catch(() => {});
+  }
+
+  // Start listening to accelerometer
+  function startShakeListener() {
+    if (shakeEnabled) return;
+    shakeEnabled = true;
+
+    window.addEventListener('devicemotion', (e) => {
+      const acc = e.accelerationIncludingGravity;
+      if (!acc) return;
+
+      const dx = Math.abs(acc.x - lastX);
+      const dy = Math.abs(acc.y - lastY);
+      const dz = Math.abs(acc.z - lastZ);
+
+      // If movement is big enough → it's a shake!
+      if (dx + dy + dz > SHAKE_THRESHOLD) {
+        triggerEmergency();
+      }
+
+      lastX = acc.x; lastY = acc.y; lastZ = acc.z;
+    });
+  }
+
+  // ─── TAP DETECTION ───────────────────────────────────────
+  function setupTapDetection() {
+    // Listen on whole dashboard — except specific buttons
+    document.getElementById('dashboardPage').addEventListener('click', (e) => {
+      if (e.target.closest('#emergencyBtn')) return; // has own handler
+      if (e.target.closest('#cancelBtn'))    return;
+      if (e.target.closest('#shakePermBtn')) return;
+      recordTap();
+    });
+  }
+
+  // ─── RECORD TAP ──────────────────────────────────────────
+  function recordTap() {
+    tapCount++;
+
+    const el = document.getElementById('tapCounter');
+    el.textContent = `Tap ${tapCount} of 3 detected…`;
+    el.classList.add('lit');
+
+    // Reset timer every tap — 2 second window
+    clearTimeout(tapTimer);
+    tapTimer = setTimeout(() => {
+      tapCount = 0;
+      el.textContent = '';
+      el.classList.remove('lit');
+    }, 2000);
+
+    // 3 taps → trigger!
+    if (tapCount >= 3) {
+      tapCount = 0;
+      clearTimeout(tapTimer);
+      el.textContent = '';
+      el.classList.remove('lit');
+      triggerEmergency();
+    }
+  }
+
+  // ─── TRIGGER EMERGENCY ───────────────────────────────────
+  function triggerEmergency() {
+    cancelled = false;
+
+    const name    = localStorage.getItem('sh_name')    || 'Someone';
+    const contact = localStorage.getItem('sh_contact') || '';
+    const now     = new Date();
+    const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const dateStr = now.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+
+    // 1. Flash screen
+    const flash = document.getElementById('flash');
+    flash.classList.add('go');
+    setTimeout(() => flash.classList.remove('go'), 600);
+
+    // 2. Shake button
+    const btn = document.getElementById('emergencyBtn');
+    btn.classList.add('shake');
+    setTimeout(() => btn.classList.remove('shake'), 700);
+
+    // 3. Show alert box
+    document.getElementById('alertBox').classList.add('open');
+    document.getElementById('alertTime').textContent = `${timeStr} · ${dateStr}`;
+
+    // 4. Fill alert messages
+    document.getElementById('msgLine1').textContent = '🚨 Emergency Alert Triggered!';
+    document.getElementById('msgLine2').textContent = `SMS being sent to: ${contact}`;
+
+    // 5. Location
+    if (userLat && userLon) {
+      showLocationInAlert(name, contact, userLat, userLon, timeStr, dateStr);
+    } else {
+      document.getElementById('msgLine3').textContent = 'Fetching your location…';
+      document.getElementById('msgLine4').textContent = 'Please wait…';
+
+      // Try to get location now
+      navigator.geolocation && navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          userLat = pos.coords.latitude.toFixed(6);
+          userLon = pos.coords.longitude.toFixed(6);
+          showLocationInAlert(name, contact, userLat, userLon, timeStr, dateStr);
+        },
+        () => {
+          document.getElementById('msgLine3').textContent = 'Location unavailable';
+          document.getElementById('msgLine4').textContent = 'Send alert anyway';
+          openSMS(contact, buildSMSText(name, null, null, timeStr, dateStr));
+        },
+        { timeout: 5000, enableHighAccuracy: true }
+      );
+    }
+
+    // 6. Start 5-sec cancel countdown
+    document.getElementById('confirmedMsg').style.display = 'none';
+    startCancel();
+  }
+
+  // ─── SHOW LOCATION + OPEN SMS ────────────────────────────
+  function showLocationInAlert(name, contact, lat, lon, timeStr, dateStr) {
+    document.getElementById('msgLine3').textContent =
+      `Location: ${lat}°N, ${lon}°E`;
+    document.getElementById('msgLine4').innerHTML =
+      `<a href="https://maps.google.com/?q=${lat},${lon}" target="_blank" style="color:#ff7777;">Open in Google Maps →</a>`;
+
+    // Build SMS text
+    const smsText = buildSMSText(name, lat, lon, timeStr, dateStr);
+
+    // Delay SMS open slightly so user sees the UI first
+    setTimeout(() => {
+      if (!cancelled) openSMS(contact, smsText);
+    }, 1500);
+  }
+
+  // ─── BUILD SMS MESSAGE ────────────────────────────────────
+  function buildSMSText(name, lat, lon, timeStr, dateStr) {
+    let locPart = lat && lon
+      ? `📍 Location: ${lat}°N, ${lon}°E\n🗺️ Maps: https://maps.google.com/?q=${lat},${lon}`
+      : '📍 Location unavailable';
+
+    return `🚨 EMERGENCY ALERT!\n\nName: ${name}\n⚠️ I need immediate help!\n\n${locPart}\n\n🕐 Time: ${timeStr}\n📅 Date: ${dateStr}\n\n⚡ Sent via SilentHelp App`;
+  }
+
+  // ─── OPEN NATIVE SMS ─────────────────────────────────────
+  function openSMS(contact, body) {
+    if (!contact) return;
+    // This opens the phone's native SMS app — works WITHOUT internet!
+    const encoded = encodeURIComponent(body);
+    // Android uses ?body=  |  iOS uses &body=
+    const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    const sep = isIOS ? '&' : '?';
+    window.location.href = `sms:${contact}${sep}body=${encoded}`;
+  }
+
+  // ─── 5-SECOND CANCEL COUNTDOWN ───────────────────────────
+  function startCancel() {
+    const section = document.getElementById('cancelSection');
+    const bar     = document.getElementById('countdownBar');
+
+    section.classList.add('show');
+
+    // Reset bar
+    bar.style.transition = 'none';
+    bar.style.width = '100%';
+    void bar.offsetWidth; // force reflow
+    bar.style.transition = 'width 5s linear';
+    bar.style.width = '0%';
+
+    // After 5 sec — confirm
+    cancelTimer = setTimeout(() => {
+      if (!cancelled) confirmAlert();
+    }, 5000);
+  }
+
+  // ─── CANCEL ALERT ────────────────────────────────────────
+  function cancelAlert() {
+    cancelled = true;
+    clearTimeout(cancelTimer);
+
+    document.getElementById('cancelSection').classList.remove('show');
+    document.getElementById('msgLine1').textContent = '✋ Alert Cancelled by user.';
+    document.getElementById('msgLine2').textContent = 'No SMS was sent.';
+    document.getElementById('msgLine3').textContent = 'Location data discarded.';
+    document.getElementById('msgLine4').textContent = '';
+    document.getElementById('confirmedMsg').style.display = 'none';
+  }
+
+  // ─── CONFIRM ALERT ───────────────────────────────────────
+  function confirmAlert() {
+    document.getElementById('cancelSection').classList.remove('show');
+    document.getElementById('confirmedMsg').style.display = 'block';
+  }
+
+</script>
+</body>
+</html>
